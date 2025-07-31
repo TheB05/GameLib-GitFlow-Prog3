@@ -1,5 +1,3 @@
-// src/app.js
-
 let games = [];
 
 function addGame(title, genre, year) {
