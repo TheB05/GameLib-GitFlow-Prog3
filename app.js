@@ -38,9 +38,18 @@ function updateGameList() {
             document.getElementById('game-release').value = game.release;
             document.getElementById('game-description').value = game.description;
             editIndex = index;
-        };
+        }; //Now you can actually edit the games, even if it is simple :D
+
+        // Create Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.onclick = function() {
+            games.splice(index, 1);
+            updateGameList();
+        }; //Now you can delete the games from the list, yooho! :D
 
         optionsCell.appendChild(editBtn);
+        optionsCell.appendChild(deleteBtn);
 
         row.appendChild(titleCell);
         row.appendChild(genreCell);
@@ -49,7 +58,7 @@ function updateGameList() {
         row.appendChild(optionsCell);
 
         tableBody.appendChild(row);
-    }); //Now you can actually edit the games, even if it is simple :D
+    }); 
 }
 
 document.getElementById('game-form').addEventListener('submit', function(event) {
