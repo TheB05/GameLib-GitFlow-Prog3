@@ -1,8 +1,14 @@
 let games = [];
+let editIndex = null;
 
 function addGame(title, genre, release, description) {
     const game = { title, genre, release, description };
-    games.push(game);
+    if (editIndex !== null) {
+        games[editIndex] = game;
+        editIndex = null;
+    } else {
+        games.push(game);
+    }
     updateGameList();
 }
 
@@ -22,7 +28,19 @@ function updateGameList() {
         genreCell.textContent = game.genre;
         releaseCell.textContent = game.release;
         descriptionCell.textContent = game.description;
-        optionsCell.textContent = 'Edit | Delete'; // Placeholder for now, options do not work yet.
+
+        // Create Edit button
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = function() {
+            document.getElementById('game-title').value = game.title;
+            document.getElementById('game-genre').value = game.genre;
+            document.getElementById('game-release').value = game.release;
+            document.getElementById('game-description').value = game.description;
+            editIndex = index;
+        };
+
+        optionsCell.appendChild(editBtn);
 
         row.appendChild(titleCell);
         row.appendChild(genreCell);
@@ -31,7 +49,7 @@ function updateGameList() {
         row.appendChild(optionsCell);
 
         tableBody.appendChild(row);
-    });
+    }); //Now you can actually edit the games, even if it is simple :D
 }
 
 document.getElementById('game-form').addEventListener('submit', function(event) {
@@ -42,4 +60,5 @@ document.getElementById('game-form').addEventListener('submit', function(event) 
     const description = document.getElementById('game-description').value;
     addGame(title, genre, release, description);
     this.reset();
+    editIndex = null;
 });
