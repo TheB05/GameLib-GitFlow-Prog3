@@ -12,9 +12,23 @@
         <form id="game-form">
             <input type="text" id="game-title" placeholder="Game Title" required>
             <input type="text" id="game-genre" placeholder="Game Genre" required>
+            <input type="text" id="game-release" placeholder="Release Date" required>
+            <input type="text" id="game-description" placeholder="Description" required>
             <button type="submit">Add Game</button>
         </form>
-        <ul id="game-list"></ul>
+        <table id="game-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Genre</th>
+                    <th>Release Date</th>
+                    <th>Description</th>
+                    <th>Options</th>
+                </tr>
+            </thead>
+            <tbody id="game-table-body">
+            </tbody>
+        </table>
     </div>
     <script src="app.js"></script>
 </body>
