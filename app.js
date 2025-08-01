@@ -1,5 +1,9 @@
-let games = [];
+let games = JSON.parse(localStorage.getItem('games')) || [];
 let editIndex = null;
+
+function saveGames() {
+    localStorage.setItem('games', JSON.stringify(games));
+}
 
 function addGame(title, genre, release, description, photo) {
     const game = { title, genre, release, description, photo };
@@ -9,6 +13,7 @@ function addGame(title, genre, release, description, photo) {
     } else {
         games.push(game);
     }
+    saveGames();
     updateGameList();
 }
 
@@ -54,6 +59,7 @@ function updateGameList() {
         deleteBtn.textContent = 'Delete';
         deleteBtn.onclick = function() {
             games.splice(index, 1);
+            saveGames();
             updateGameList();
         }; //Now you can delete the games from the list, yooho! :D
 
@@ -82,3 +88,5 @@ document.getElementById('game-form').addEventListener('submit', function(event) 
     this.reset();
     editIndex = null;
 });
+
+updateGameList();
