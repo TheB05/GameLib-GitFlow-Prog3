@@ -1,8 +1,8 @@
 let games = [];
 let editIndex = null;
 
-function addGame(title, genre, release, description) {
-    const game = { title, genre, release, description };
+function addGame(title, genre, release, description, photo) {
+    const game = { title, genre, release, description, photo };
     if (editIndex !== null) {
         games[editIndex] = game;
         editIndex = null;
@@ -18,6 +18,14 @@ function updateGameList() {
     games.forEach((game, index) => {
         const row = document.createElement('tr');
 
+        const photoCell = document.createElement('td');
+        const img = document.createElement('img');
+        img.src = game.photo;
+        img.alt = game.title;
+        img.style.width = '50px';
+        img.style.height = '50px';
+        photoCell.appendChild(img);
+
         const titleCell = document.createElement('td');
         const genreCell = document.createElement('td');
         const releaseCell = document.createElement('td');
@@ -29,7 +37,7 @@ function updateGameList() {
         releaseCell.textContent = game.release;
         descriptionCell.textContent = game.description;
 
-        // Create Edit button
+        //Create edit button
         const editBtn = document.createElement('button');
         editBtn.textContent = 'Edit';
         editBtn.onclick = function() {
@@ -37,10 +45,11 @@ function updateGameList() {
             document.getElementById('game-genre').value = game.genre;
             document.getElementById('game-release').value = game.release;
             document.getElementById('game-description').value = game.description;
+            document.getElementById('game-photo').value = game.photo;
             editIndex = index;
         }; //Now you can actually edit the games, even if it is simple :D
 
-        // Create Delete button
+        //Create delete button
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Delete';
         deleteBtn.onclick = function() {
@@ -51,6 +60,7 @@ function updateGameList() {
         optionsCell.appendChild(editBtn);
         optionsCell.appendChild(deleteBtn);
 
+        row.appendChild(photoCell);
         row.appendChild(titleCell);
         row.appendChild(genreCell);
         row.appendChild(releaseCell);
@@ -67,7 +77,8 @@ document.getElementById('game-form').addEventListener('submit', function(event) 
     const genre = document.getElementById('game-genre').value;
     const release = document.getElementById('game-release').value;
     const description = document.getElementById('game-description').value;
-    addGame(title, genre, release, description);
+    const photo = document.getElementById('game-photo').value;
+    addGame(title, genre, release, description, photo);
     this.reset();
     editIndex = null;
 });
