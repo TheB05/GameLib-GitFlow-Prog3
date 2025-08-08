@@ -127,8 +127,8 @@ try:
     #7. Login with wrong credentials.
     try:
         driver.get(APP_URL)
-        wait_for_element(driver, By.ID, "login-username").send_keys("WrongUser")
-        wait_for_element(driver, By.ID, "login-password").send_keys("wrongpass")
+        wait_for_element(driver, By.ID, "login-username").send_keys("KasugaIchiban")
+        wait_for_element(driver, By.ID, "login-password").send_keys("Ichiban54321")
         wait_for_element(driver, By.CSS_SELECTOR, "#login-form button[type='submit']").click()
         time.sleep(1)
         error_msg = wait_for_element(driver, By.ID, "login-error").text
