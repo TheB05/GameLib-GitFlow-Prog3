@@ -1,6 +1,52 @@
 let games = JSON.parse(localStorage.getItem('games')) || [];
 let editIndex = null;
 
+const USERNAME = "IchibanKasuga";
+const PASSWORD = "ichiban12345";
+
+function showLogin() {
+    document.body.innerHTML = `
+        <div class="login-container">
+            <h2>Login</h2>
+            <form id="login-form">
+                <input type="text" id="login-username" placeholder="Username" required><br>
+                <input type="password" id="login-password" placeholder="Password" required><br>
+                <button type="submit">Login</button>
+                <p id="login-error" style="color:red;"></p>
+            </form>
+        </div>
+    `;
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+        if (username === USERNAME && password === PASSWORD) {
+            document.body.innerHTML = originalBody;
+            attachGameFormEvents();
+            updateGameList();
+            setupToggleList();
+        } else {
+            document.getElementById('login-error').textContent = "Invalid username or password.";
+        }
+    });
+}
+
+const originalBody = document.body.innerHTML;
+
+function attachGameFormEvents() {
+    document.getElementById('game-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const title = document.getElementById('game-title').value;
+        const genre = document.getElementById('game-genre').value;
+        const release = document.getElementById('game-release').value;
+        const description = document.getElementById('game-description').value;
+        const photo = document.getElementById('game-photo').value;
+        addGame(title, genre, release, description, photo);
+        this.reset();
+        editIndex = null;
+    });
+}
+
 function saveGames() {
     localStorage.setItem('games', JSON.stringify(games));
 }
@@ -77,16 +123,18 @@ function updateGameList() {
     }); 
 }
 
-document.getElementById('game-form').addEventListener('submit', function(event) {
-    event.preventDefault();
-    const title = document.getElementById('game-title').value;
-    const genre = document.getElementById('game-genre').value;
-    const release = document.getElementById('game-release').value;
-    const description = document.getElementById('game-description').value;
-    const photo = document.getElementById('game-photo').value;
-    addGame(title, genre, release, description, photo);
-    this.reset();
-    editIndex = null;
-});
+function setupToggleList() {
+    const toggleBtn = document.getElementById('toggle-list-btn');
+    const gameTable = document.getElementById('game-table');
+    toggleBtn.addEventListener('click', function() {
+        if (gameTable.style.display === 'none') {
+            gameTable.style.display = '';
+            toggleBtn.textContent = 'Hide Game List';
+        } else {
+            gameTable.style.display = 'none';
+            toggleBtn.textContent = 'Show Game List';
+        }
+    });
+}
 
-updateGameList();
+showLogin();
