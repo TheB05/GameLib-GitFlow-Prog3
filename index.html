@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Library</title>
+    <title>GameLib</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Game Library</h1>
+        <h1>GameLib</h1>
         <form id="game-form">
+            <input type="text" id="game-title" placeholder="Game Title" maxlength="100" required>
+            <input type="text" id="game-genre" placeholder="Game Genre" maxlength="50" required>
+            <input type="date" id="game-release" placeholder="Release Date" required>
+            <input type="text" id="game-description" placeholder="Description" maxlength="50" required>
+            <input type="number" id="game-achievements" placeholder="Achievements" maxlength="2" min="0" max="99" required>
+            <input type="number" id="game-playtime" placeholder="Total Playtime (hrs)" maxlength="5" min="0" max="99999" required>
             <input type="text" id="game-photo" placeholder="Photo URL" required>
-            <input type="text" id="game-title" placeholder="Game Title" required>
-            <input type="text" id="game-genre" placeholder="Game Genre" required>
-            <input type="text" id="game-release" placeholder="Release Date" required>
-            <input type="text" id="game-description" placeholder="Description" required>
             <button type="submit">Add Game</button>
         </form>
         <button id="toggle-list-btn">Hide Game List</button>
@@ -26,13 +28,18 @@
                     <th>Genre</th>
                     <th>Release Date</th>
                     <th>Description</th>
+                    <th>Achievements</th>
+                    <th>Playtime (hrs)</th>
                     <th>Options</th>
                 </tr>
             </thead>
-            <tbody id="game-table-body">
-            </tbody>
+            <tbody id="game-table-body"></tbody>
         </table>
+        <div id="dashboard"></div>
     </div>
+    <footer class="footer">
+        GameLib version 1.0
+    </footer>
     <script src="app.js"></script>
 </body>
 </html>
