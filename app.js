@@ -4,31 +4,68 @@ let editIndex = null;
 const USERNAME = "IchibanKasuga";
 const PASSWORD = "ichiban12345";
 
-let originalBody = "";
+const appHTML = `
+<div class="container">
+    <h1>GameLib</h1>
+    <form id="game-form">
+        <input type="text" id="game-title" placeholder="Title" maxlength="100" required>
+        <input type="text" id="game-genre" placeholder="Genre" maxlength="50" required>
+        <input type="date" id="game-release" required>
+        <input type="text" id="game-description" placeholder="Description" maxlength="50" required>
+        <input type="number" id="game-achievements" placeholder="Achievements" min="0" max="99" required>
+        <input type="number" id="game-playtime" placeholder="Playtime (hrs)" min="0" max="99999" required>
+        <input type="text" id="game-photo" placeholder="Photo URL" maxlength="200" required>
+        <button type="submit">Add Game</button>
+    </form>
+    <p id="game-error" style="color:red;"></p>
+    <button id="toggle-list-btn">Hide Game List</button>
+    <div id="empty-msg" style="text-align:center;margin:10px;color:#555;"></div>
+    <table id="game-table">
+        <thead>
+            <tr>
+                <th>Photo</th><th>Title</th><th>Genre</th><th>Release</th>
+                <th>Description</th><th>Achievements</th><th>Playtime</th><th>Options</th>
+            </tr>
+        </thead>
+        <tbody id="game-table-body"></tbody>
+    </table>
+    <div id="dashboard"></div>
+</div>
+<footer class="footer" style="text-align:center;color:#6366f1;font-size:16px;margin-top:40px;margin-bottom:16px;letter-spacing:1px;font-weight:500;">
+    GameLib version 1.0
+</footer>
+`;
 
 window.addEventListener('DOMContentLoaded', () => {
-    originalBody = document.body.innerHTML;
-    showLogin();
+    if (localStorage.getItem('loggedIn') === 'true') {
+        showApp();
+    } else {
+        showLogin();
+    }
 });
 
-//Fixin the login form...
 function showLogin() {
     document.body.innerHTML = `
-    <div class="login-container">
-        <h2>Login</h2>
-        <form id="login-form">
-            <input type="text" id="login-username" placeholder="Username" maxlength="25" required>
-            <input type="password" id="login-password" placeholder="Password" maxlength="25" required>
-            <button type="submit">Login</button>
-            <p id="login-error" style="color:red;"></p>
-        </form>
-    </div>
-`;
+        <div class="login-container">
+            <h2>Login</h2>
+            <form id="login-form">
+                <input type="text" id="login-username" placeholder="Username" maxlength="25" required>
+                <input type="password" id="login-password" placeholder="Password" maxlength="25" required>
+                <button type="submit">Login</button>
+                <p id="login-error" style="color:red;"></p>
+            </form>
+        </div>
+    `;
     document.getElementById('login-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const username = document.getElementById('login-username').value;
         const password = document.getElementById('login-password').value;
+        if (!username || !password) {
+            document.getElementById('login-error').textContent = "Fields cannot be empty.";
+            return;
+        }
         if (username === USERNAME && password === PASSWORD) {
+            localStorage.setItem('loggedIn', 'true');
             showApp();
         } else {
             document.getElementById('login-error').textContent = "Invalid username or password.";
@@ -37,7 +74,7 @@ function showLogin() {
 }
 
 function showApp() {
-    document.body.innerHTML = originalBody;
+    document.body.innerHTML = appHTML;
     addLogoutButton();
     attachGameFormEvents();
     updateGameList();
@@ -61,6 +98,7 @@ function setupLogout() {
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('loggedIn');
             showLogin();
         });
     }
@@ -78,7 +116,21 @@ function attachGameFormEvents() {
             const achievements = document.getElementById('game-achievements').value;
             const playtime = document.getElementById('game-playtime').value;
             const photo = document.getElementById('game-photo').value;
+
+            let errorMsg = "";
+            if (!title || !genre || !release || !description || !achievements || !playtime || !photo) {
+                errorMsg = "All fields are required.";
+            } else if (isNaN(achievements) || isNaN(playtime)) {
+                errorMsg = "Achievements and Playtime must be numbers.";
+            }
+
+            let errorElem = document.getElementById('game-error');
+            errorElem.textContent = errorMsg;
+
+            if (errorMsg) return;
+
             addGame(title, genre, release, description, achievements, playtime, photo);
+            errorElem.textContent = "";
             this.reset();
             editIndex = null;
         });
@@ -104,8 +156,14 @@ function addGame(title, genre, release, description, achievements, playtime, pho
 
 function updateGameList() {
     const tableBody = document.getElementById('game-table-body');
+    const emptyMsg = document.getElementById('empty-msg');
     if (!tableBody) return;
     tableBody.innerHTML = '';
+    if (games.length === 0) {
+        emptyMsg.textContent = "No games";
+        return;
+    }
+    emptyMsg.textContent = "";
     games.forEach((game, index) => {
         const row = document.createElement('tr');
 
@@ -116,6 +174,7 @@ function updateGameList() {
         img.style.width = '50px';
         img.style.height = '50px';
         photoCell.appendChild(img);
+        photoCell.appendChild(document.createTextNode(" " + game.title)); // fallback text
 
         const titleCell = document.createElement('td');
         const genreCell = document.createElement('td');
@@ -132,7 +191,6 @@ function updateGameList() {
         achievementsCell.textContent = game.achievements;
         playtimeCell.textContent = game.playtime;
 
-        //Edit button
         const editBtn = document.createElement('button');
         editBtn.textContent = 'Edit';
         editBtn.onclick = function() {
@@ -146,7 +204,6 @@ function updateGameList() {
             editIndex = index;
         };
 
-        //Delete button
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Delete';
         deleteBtn.onclick = function() {
@@ -188,12 +245,10 @@ function setupToggleList() {
     }
 }
 
-//DASHBOARD: Show top 3 most played genres.
 function showDashboard() {
     let dashboard = document.getElementById('dashboard');
     if (!dashboard) return;
 
-    //This Calculates the top 3 genres by total playtime.
     const genrePlaytime = {};
     games.forEach(game => {
         const genre = game.genre || "Unknown";
