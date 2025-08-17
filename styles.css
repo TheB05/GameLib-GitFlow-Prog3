@@ -144,8 +144,10 @@ img {
     box-shadow: 0 2px 12px rgba(99,102,241,0.10);
 }
 
+/* 🔧 Sobrescribimos aquí para que username y password NO hereden el flex */
 #login-form input[type="text"],
 #login-form input[type="password"] {
+    flex: none;
     width: 220px;
     height: 40px;
     margin-bottom: 16px;
