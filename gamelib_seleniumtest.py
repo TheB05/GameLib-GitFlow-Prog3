@@ -4,8 +4,6 @@ from selenium.webdriver.chrome.options import Options
 import time
 import os
 
-#Configuration of the test
-#Make sure to change the APP_URL to the correct path of your game library app.
 APP_URL = "file:///d:/ITLA/7mo%20cuatrimestre/Programaci%C3%B3n%203/T3%20CRUD/game-library-app/src/index.html"
 USERNAME = "IchibanKasuga"
 PASSWORD = "ichiban12345"
@@ -39,239 +37,276 @@ def record_result(name, status, screenshot, message=""):
     })
 
 chrome_options = Options()
-#Chrome driver configuration (You need to install google chrome in order to use this by the way, because I couldn't do it on OperaGX).
-#But if you want to use OperaGX, you can change the webdriver.Chrome() to webdriver.Opera() and set the path to your OperaGX executable.
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(APP_URL)
 
 try:
-    #1. Log in to the application.
+    #Login tests.
+    #Rejects incorrect credentials.
     try:
+        wait_for_element(driver, By.ID, "login-username").clear()
+        wait_for_element(driver, By.ID, "login-password").clear()
+        wait_for_element(driver, By.ID, "login-username").send_keys("KasugaIchiban")
+        wait_for_element(driver, By.ID, "login-password").send_keys("1234Ichiban")
+        wait_for_element(driver, By.CSS_SELECTOR, "#login-form button[type='submit']").click()
+        time.sleep(1)
+        error_msg = wait_for_element(driver, By.ID, "login-error").text
+        assert "Invalid" in error_msg
+        screenshot = take_screenshot(driver, "auth_reject_wrong_credentials")
+        record_result("Rejects incorrect credentials", "PASS", screenshot)
+    except Exception as e:
+        screenshot = take_screenshot(driver, "auth_reject_wrong_credentials_fail")
+        record_result("Rejects incorrect credentials", "FAIL", screenshot, str(e))
+
+    #Validates empty fields.
+    try:
+        driver.get(APP_URL)
+        wait_for_element(driver, By.ID, "login-username").clear()
+        wait_for_element(driver, By.ID, "login-password").clear()
+        wait_for_element(driver, By.CSS_SELECTOR, "#login-form button[type='submit']").click()
+        time.sleep(1)
+        error_msg = wait_for_element(driver, By.ID, "login-error").text
+        assert error_msg.strip() != ""
+        screenshot = take_screenshot(driver, "auth_empty_fields")
+        record_result("Validates empty fields", "PASS", screenshot)
+    except Exception as e:
+        screenshot = take_screenshot(driver, "auth_empty_fields_fail")
+        record_result("Validates empty fields", "FAIL", screenshot, str(e))
+
+    #Accepts correct credentials and redirects to game form.
+    try:
+        driver.get(APP_URL)
+        wait_for_element(driver, By.ID, "login-username").clear()
+        wait_for_element(driver, By.ID, "login-password").clear()
         wait_for_element(driver, By.ID, "login-username").send_keys(USERNAME)
         wait_for_element(driver, By.ID, "login-password").send_keys(PASSWORD)
         wait_for_element(driver, By.CSS_SELECTOR, "#login-form button[type='submit']").click()
         time.sleep(2)
-        screenshot = take_screenshot(driver, "01_login_success")
-        record_result("Login with correct credentials", "PASS", screenshot)
+        wait_for_element(driver, By.ID, "game-form")
+        screenshot = take_screenshot(driver, "auth_accept_correct_credentials")
+        record_result("Accepts correct credentials and redirects", "PASS", screenshot)
     except Exception as e:
-        screenshot = take_screenshot(driver, "01_login_success_fail")
-        record_result("Login with correct credentials", "FAIL", screenshot, str(e))
+        screenshot = take_screenshot(driver, "auth_accept_correct_credentials_fail")
+        record_result("Accepts correct credentials and redirects", "FAIL", screenshot, str(e))
 
-    #2. View list of video games.
+    #Keeps session active until logout.
     try:
-        table = wait_for_element(driver, By.ID, "game-table")
-        time.sleep(1)
-        screenshot = take_screenshot(driver, "02_view_list")
-        record_result("View game list", "PASS", screenshot)
+        driver.refresh()
+        wait_for_element(driver, By.ID, "game-form")
+        screenshot = take_screenshot(driver, "auth_session_persists")
+        record_result("Session persists after reload", "PASS", screenshot)
     except Exception as e:
-        screenshot = take_screenshot(driver, "02_view_list_fail")
-        record_result("View game list", "FAIL", screenshot, str(e))
+        screenshot = take_screenshot(driver, "auth_session_persists_fail")
+        record_result("Session persists after reload", "FAIL", screenshot, str(e))
 
-    #3. Toggle the game list visibility.
+    #Logout clears session and redirects to login.
     try:
-        toggle_btn = wait_for_element(driver, By.ID, "toggle-list-btn")
-        toggle_btn.click()
+        wait_for_element(driver, By.ID, "logout-btn").click()
         time.sleep(1)
-        toggle_btn = wait_for_element(driver, By.ID, "toggle-list-btn")
-        toggle_btn.click()
-        time.sleep(1)
-        screenshot = take_screenshot(driver, "03_toggle_list")
-        record_result("Toggle game list visibility", "PASS", screenshot)
+        wait_for_element(driver, By.ID, "login-form")
+        screenshot = take_screenshot(driver, "auth_logout_clears_session")
+        record_result("Logout clears session and redirects", "PASS", screenshot)
     except Exception as e:
-        screenshot = take_screenshot(driver, "03_toggle_list_fail")
-        record_result("Toggle game list visibility", "FAIL", screenshot, str(e))
+        screenshot = take_screenshot(driver, "auth_logout_clears_session_fail")
+        record_result("Logout clears session and redirects", "FAIL", screenshot, str(e))
 
-    #4. Add a new game.
-    try:
-        wait_for_element(driver, By.ID, "game-title").send_keys("Sonic Adventure")
-        wait_for_element(driver, By.ID, "game-genre").send_keys("Platformer")
-        wait_for_element(driver, By.ID, "game-release").send_keys("1998")
-        wait_for_element(driver, By.ID, "game-description").send_keys("A classic 3D Sonic game.")
-        wait_for_element(driver, By.ID, "game-photo").send_keys("https://static.wikia.nocookie.net/sonic/images/6/67/Sonic_Adventure_main_art.png/revision/latest?cb=20210819015445")
-        wait_for_element(driver, By.CSS_SELECTOR, "#game-form button[type='submit']").click()
-        time.sleep(2)
-        screenshot = take_screenshot(driver, "04_add_game")
-        record_result("Add new game", "PASS", screenshot)
-    except Exception as e:
-        screenshot = take_screenshot(driver, "04_add_game_fail")
-        record_result("Add new game", "FAIL", screenshot, str(e))
-
-    #5. Edit the game details.
-    try:
-        edit_btn = wait_for_element(driver, By.XPATH, "//tbody[@id='game-table-body']/tr[1]/td[last()]/button[1]")
-        edit_btn.click()
-        time.sleep(1)
-        title_input = wait_for_element(driver, By.ID, "game-title")
-        title_input.clear()
-        time.sleep(1)
-        title_input.send_keys("Sonic Adventure DX")
-        wait_for_element(driver, By.CSS_SELECTOR, "#game-form button[type='submit']").click()
-        time.sleep(2)
-        screenshot = take_screenshot(driver, "05_edit_game")
-        record_result("Edit first game", "PASS", screenshot)
-    except Exception as e:
-        screenshot = take_screenshot(driver, "05_edit_game_fail")
-        record_result("Edit first game", "FAIL", screenshot, str(e))
-
-    #6. Delete video game.
-    try:
-        delete_btn = wait_for_element(driver, By.XPATH, "//tbody[@id='game-table-body']/tr[1]/td[last()]/button[2]")
-        delete_btn.click()
-        time.sleep(2)
-        screenshot = take_screenshot(driver, "06_delete_game")
-        record_result("Delete first game", "PASS", screenshot)
-    except Exception as e:
-        screenshot = take_screenshot(driver, "06_delete_game_fail")
-        record_result("Delete first game", "FAIL", screenshot, str(e))
-
-    #7. Login with wrong credentials.
+    #Character limit in login fields.
     try:
         driver.get(APP_URL)
-        wait_for_element(driver, By.ID, "login-username").send_keys("KasugaIchiban")
-        wait_for_element(driver, By.ID, "login-password").send_keys("Ichiban54321")
-        wait_for_element(driver, By.CSS_SELECTOR, "#login-form button[type='submit']").click()
-        time.sleep(1)
-        error_msg = wait_for_element(driver, By.ID, "login-error").text
-        assert "Invalid" in error_msg
-        screenshot = take_screenshot(driver, "07_negative_login")
-        record_result("Negative login test", "PASS", screenshot)
-    except Exception as e:
-        screenshot = take_screenshot(driver, "07_negative_login_fail")
-        record_result("Negative login test", "FAIL", screenshot, str(e))
-
-    #8. Login with max length username and password.
-    try:
-        driver.get(APP_URL)
-        long_user = "A" * 100
-        long_pass = "B" * 100
+        long_user = "Ichiban" * 30
+        long_pass = "Kasuga" * 30
         wait_for_element(driver, By.ID, "login-username").send_keys(long_user)
         wait_for_element(driver, By.ID, "login-password").send_keys(long_pass)
-        wait_for_element(driver, By.CSS_SELECTOR, "#login-form button[type='submit']").click()
-        time.sleep(1)
-        error_msg = wait_for_element(driver, By.ID, "login-error").text
-        assert "Invalid" in error_msg
-        screenshot = take_screenshot(driver, "08_boundary_login")
-        record_result("Boundary login test", "PASS", screenshot)
+        username_value = wait_for_element(driver, By.ID, "login-username").get_attribute("value")
+        password_value = wait_for_element(driver, By.ID, "login-password").get_attribute("value")
+        assert len(username_value) <= 25 and len(password_value) <= 25
+        screenshot = take_screenshot(driver, "auth_login_char_limit")
+        record_result("Login fields enforce 25-char limit", "PASS", screenshot)
     except Exception as e:
-        screenshot = take_screenshot(driver, "08_boundary_login_fail")
-        record_result("Boundary login test", "FAIL", screenshot, str(e))
+        screenshot = take_screenshot(driver, "auth_login_char_limit_fail")
+        record_result("Login fields enforce 25-char limit", "FAIL", screenshot, str(e))
 
-    #9. Happy path login for further tests.
+    #CRUD tests.
+    #Create: Validates required fields and numeric types.
     try:
+        #Login first before testing CRUD, just to be sure it works.
         wait_for_element(driver, By.ID, "login-username").clear()
         wait_for_element(driver, By.ID, "login-password").clear()
         wait_for_element(driver, By.ID, "login-username").send_keys(USERNAME)
         wait_for_element(driver, By.ID, "login-password").send_keys(PASSWORD)
         wait_for_element(driver, By.CSS_SELECTOR, "#login-form button[type='submit']").click()
         time.sleep(1)
-        screenshot = take_screenshot(driver, "09_login_again")
-        record_result("Login again for further tests", "PASS", screenshot)
-    except Exception as e:
-        screenshot = take_screenshot(driver, "09_login_again_fail")
-        record_result("Login again for further tests", "FAIL", screenshot, str(e))
-
-    #10. Add game with empty fields. (The row count should not change)
-    try:
+        #Try to submit empty form fields and check for validation.
         wait_for_element(driver, By.ID, "game-title").clear()
         wait_for_element(driver, By.ID, "game-genre").clear()
         wait_for_element(driver, By.ID, "game-release").clear()
         wait_for_element(driver, By.ID, "game-description").clear()
+        wait_for_element(driver, By.ID, "game-achievements").clear()
+        wait_for_element(driver, By.ID, "game-playtime").clear()
         wait_for_element(driver, By.ID, "game-photo").clear()
         wait_for_element(driver, By.CSS_SELECTOR, "#game-form button[type='submit']").click()
         time.sleep(1)
-        screenshot = take_screenshot(driver, "10_negative_add_game")
-        record_result("Negative add game test", "PASS", screenshot)
+        # Should not add a new row, because fields are required for the form.
+        rows = driver.find_elements(By.XPATH, "//tbody[@id='game-table-body']/tr")
+        assert len(rows) == 0
+        screenshot = take_screenshot(driver, "crud_create_required_fields")
+        record_result("Create validates required fields", "PASS", screenshot)
     except Exception as e:
-        screenshot = take_screenshot(driver, "10_negative_add_game_fail")
-        record_result("Negative add game test", "FAIL", screenshot, str(e))
+        screenshot = take_screenshot(driver, "crud_create_required_fields_fail")
+        record_result("Create validates required fields", "FAIL", screenshot, str(e))
 
-    #11. Add game with very long values.
+    #Create: Validates numeric types.
     try:
-        long_text = "X" * 255
-        wait_for_element(driver, By.ID, "game-title").send_keys(long_text)
-        wait_for_element(driver, By.ID, "game-genre").send_keys(long_text)
-        wait_for_element(driver, By.ID, "game-release").send_keys("9999")
-        wait_for_element(driver, By.ID, "game-description").send_keys(long_text)
-        wait_for_element(driver, By.ID, "game-photo").send_keys("https://preview.redd.it/kaito-san-v0-70v4wow474sc1.jpeg?width=1080&format=pjpg&auto=webp&s=2d5088e36661cbca154bb4560ba3f2ccd9ef8928")
+        wait_for_element(driver, By.ID, "game-title").send_keys("Sonic Adventure")
+        wait_for_element(driver, By.ID, "game-genre").send_keys("Platformer")
+        wait_for_element(driver, By.ID, "game-release").send_keys("1998-23-12")
+        wait_for_element(driver, By.ID, "game-description").send_keys("Sonic!")
+        wait_for_element(driver, By.ID, "game-achievements").send_keys("abc")  #Check numeric validation.
+        wait_for_element(driver, By.ID, "game-playtime").send_keys("xyz")      #Check numeric validation, again.
+        wait_for_element(driver, By.ID, "game-photo").send_keys("https://static.wikia.nocookie.net/sonic/images/6/67/Sonic_Adventure_main_art.png/revision/latest?cb=20210819015445")
         wait_for_element(driver, By.CSS_SELECTOR, "#game-form button[type='submit']").click()
         time.sleep(1)
-        screenshot = take_screenshot(driver, "11_boundary_add_game")
-        record_result("Boundary add game test", "PASS", screenshot)
+        #Should not add a new row again, because achievements and playtime are not numeric.
+        rows = driver.find_elements(By.XPATH, "//tbody[@id='game-table-body']/tr")
+        assert len(rows) == 0
+        screenshot = take_screenshot(driver, "crud_create_numeric_validation")
+        record_result("Create validates numeric types", "PASS", screenshot)
     except Exception as e:
-        screenshot = take_screenshot(driver, "11_boundary_add_game_fail")
-        record_result("Boundary add game test", "FAIL", screenshot, str(e))
+        screenshot = take_screenshot(driver, "crud_create_numeric_validation_fail")
+        record_result("Create validates numeric types", "FAIL", screenshot, str(e))
 
-    #12. Edit game to empty values.
+    #Create: Add valid game.
+    try:
+        wait_for_element(driver, By.ID, "game-achievements").clear()
+        wait_for_element(driver, By.ID, "game-playtime").clear()
+        wait_for_element(driver, By.ID, "game-achievements").send_keys("10")
+        wait_for_element(driver, By.ID, "game-playtime").send_keys("100")
+        wait_for_element(driver, By.CSS_SELECTOR, "#game-form button[type='submit']").click()
+        time.sleep(1)
+        rows = driver.find_elements(By.XPATH, "//tbody[@id='game-table-body']/tr")
+        assert len(rows) == 1
+        screenshot = take_screenshot(driver, "crud_create_valid_game")
+        record_result("Create valid game", "PASS", screenshot)
+    except Exception as e:
+        screenshot = take_screenshot(driver, "crud_create_valid_game_fail")
+        record_result("Create valid game", "FAIL", screenshot, str(e))
+
+    #Read: Displays all stored games.
+    try:
+        row = wait_for_element(driver, By.XPATH, "//tbody[@id='game-table-body']/tr[1]")
+        cells = row.find_elements(By.TAG_NAME, "td")
+        assert all(cell.text.strip() != "" for cell in cells[:-1]) 
+        screenshot = take_screenshot(driver, "crud_read_display_games")
+        record_result("Read displays all stored games", "PASS", screenshot)
+    except Exception as e:
+        screenshot = take_screenshot(driver, "crud_read_display_games_fail")
+        record_result("Read displays all stored games", "FAIL", screenshot, str(e))
+
+    #Update: Changes are reflected and persist.
     try:
         edit_btn = wait_for_element(driver, By.XPATH, "//tbody[@id='game-table-body']/tr[1]/td[last()]/button[1]")
         edit_btn.click()
-        wait_for_element(driver, By.ID, "game-title").clear()
-        wait_for_element(driver, By.ID, "game-genre").clear()
-        wait_for_element(driver, By.ID, "game-release").clear()
-        wait_for_element(driver, By.ID, "game-description").clear()
-        wait_for_element(driver, By.ID, "game-photo").clear()
+        title_input = wait_for_element(driver, By.ID, "game-title")
+        title_input.clear()
+        title_input.send_keys("Test Game Updated")
         wait_for_element(driver, By.CSS_SELECTOR, "#game-form button[type='submit']").click()
         time.sleep(1)
-        screenshot = take_screenshot(driver, "12_negative_edit_game")
-        record_result("Negative edit game test", "PASS", screenshot)
+        updated_row = wait_for_element(driver, By.XPATH, "//tbody[@id='game-table-body']/tr[1]/td[2]")
+        assert updated_row.text == "Test Game Updated"
+        screenshot = take_screenshot(driver, "crud_update_reflects")
+        record_result("Update reflects immediately and persists", "PASS", screenshot)
     except Exception as e:
-        screenshot = take_screenshot(driver, "12_negative_edit_game_fail")
-        record_result("Negative edit game test", "FAIL", screenshot, str(e))
+        screenshot = take_screenshot(driver, "crud_update_reflects_fail")
+        record_result("Update reflects immediately and persists", "FAIL", screenshot, str(e))
 
-    #13. Edit game to max length values.
+    #Delete: Deletion is permanent and persists.
     try:
-        edit_btn = wait_for_element(driver, By.XPATH, "//tbody[@id='game-table-body']/tr[1]/td[last()]/button[1]")
-        edit_btn.click()
-        long_text = "X" * 255
-        wait_for_element(driver, By.ID, "game-title").clear()
-        wait_for_element(driver, By.ID, "game-title").send_keys(long_text)
-        wait_for_element(driver, By.ID, "game-genre").clear()
-        wait_for_element(driver, By.ID, "game-genre").send_keys(long_text)
-        wait_for_element(driver, By.ID, "game-release").clear()
-        wait_for_element(driver, By.ID, "game-release").send_keys("9999")
-        wait_for_element(driver, By.ID, "game-description").clear()
-        wait_for_element(driver, By.ID, "game-description").send_keys(long_text)
-        wait_for_element(driver, By.ID, "game-photo").clear()
-        wait_for_element(driver, By.ID, "game-photo").send_keys("https://preview.redd.it/kaito-san-v0-70v4wow474sc1.jpeg?width=1080&format=pjpg&auto=webp&s=2d5088e36661cbca154bb4560ba3f2ccd9ef8928")
-        wait_for_element(driver, By.CSS_SELECTOR, "#game-form button[type='submit']").click()
+        delete_btn = wait_for_element(driver, By.XPATH, "//tbody[@id='game-table-body']/tr[1]/td[last()]/button[2]")
+        delete_btn.click()
         time.sleep(1)
-        screenshot = take_screenshot(driver, "13_boundary_edit_game")
-        record_result("Boundary edit game test", "PASS", screenshot)
+        driver.refresh()
+        time.sleep(1)
+        rows = driver.find_elements(By.XPATH, "//tbody[@id='game-table-body']/tr")
+        assert len(rows) == 0
+        screenshot = take_screenshot(driver, "crud_delete_persists")
+        record_result("Delete is permanent and persists", "PASS", screenshot)
     except Exception as e:
-        screenshot = take_screenshot(driver, "13_boundary_edit_game_fail")
-        record_result("Boundary edit game test", "FAIL", screenshot, str(e))
+        screenshot = take_screenshot(driver, "crud_delete_persists_fail")
+        record_result("Delete is permanent and persists", "FAIL", screenshot, str(e))
 
-    #14. Delete when no games exist.
+    #List display tests.
     try:
-        while True:
-            try:
-                delete_btn = driver.find_element(By.XPATH, "//tbody[@id='game-table-body']/tr[1]/td[last()]/button[2]")
-                delete_btn.click()
-                time.sleep(0.5)
-            except:
-                break
-        screenshot = take_screenshot(driver, "14_negative_delete")
-        record_result("Negative delete test", "PASS", screenshot)
+        driver.get(APP_URL)
+        wait_for_element(driver, By.ID, "login-username").send_keys(USERNAME)
+        wait_for_element(driver, By.ID, "login-password").send_keys(PASSWORD)
+        wait_for_element(driver, By.CSS_SELECTOR, "#login-form button[type='submit']").click()
+        time.sleep(1)
+        table_body = wait_for_element(driver, By.ID, "game-table-body")
+        assert "No games" in driver.page_source or len(table_body.text.strip()) == 0
+        screenshot = take_screenshot(driver, "list_empty_message")
+        record_result("List loads and shows empty message", "PASS", screenshot)
     except Exception as e:
-        screenshot = take_screenshot(driver, "14_negative_delete_fail")
-        record_result("Negative delete test", "FAIL", screenshot, str(e))
+        screenshot = take_screenshot(driver, "list_empty_message_fail")
+        record_result("List loads and shows empty message", "FAIL", screenshot, str(e))
+
+    #Dashboard tests.
+    try:
+        for i, (title, genre, playtime) in enumerate([
+            ("Yakuza 4", "Action", "50"),
+            ("Yakuza 3", "Action", "100"),
+            ("Sonic Lost Worlds", "Platformer", "150"),
+            ("Yakuza 7", "RPG", "20"),
+        ]):
+            wait_for_element(driver, By.ID, "game-title").clear()
+            wait_for_element(driver, By.ID, "game-genre").clear()
+            wait_for_element(driver, By.ID, "game-release").clear()
+            wait_for_element(driver, By.ID, "game-description").clear()
+            wait_for_element(driver, By.ID, "game-achievements").clear()
+            wait_for_element(driver, By.ID, "game-playtime").clear()
+            wait_for_element(driver, By.ID, "game-photo").clear()
+            wait_for_element(driver, By.ID, "game-title").send_keys(title)
+            wait_for_element(driver, By.ID, "game-genre").send_keys(genre)
+            wait_for_element(driver, By.ID, "game-release").send_keys("2025-15-8")
+            wait_for_element(driver, By.ID, "game-description").send_keys("Juego de prueba")
+            wait_for_element(driver, By.ID, "game-achievements").send_keys("5")
+            wait_for_element(driver, By.ID, "game-playtime").send_keys(playtime)
+            wait_for_element(driver, By.ID, "game-photo").send_keys("https://static.wikia.nocookie.net/yakuza/images/e/e6/Yakuza_4_Remastered_-_Cover_-_PS4_WW.jpeg/revision/latest/thumbnail/width/360/height/360?cb=20210609074200")
+            wait_for_element(driver, By.CSS_SELECTOR, "#game-form button[type='submit']").click()
+            time.sleep(0.5)
+        dashboard = wait_for_element(driver, By.ID, "dashboard")
+        assert "RPG" in dashboard.text and "Action" in dashboard.text and "Puzzle" in dashboard.text
+        screenshot = take_screenshot(driver, "dashboard_top_genres")
+        record_result("Dashboard updates and calculates top 3 genres", "PASS", screenshot)
+    except Exception as e:
+        screenshot = take_screenshot(driver, "dashboard_top_genres_fail")
+        record_result("Dashboard updates and calculates top 3 genres", "FAIL", screenshot, str(e))
+
+    #Data Persistence tests.
+    try:
+        driver.refresh()
+        time.sleep(1)
+        rows = driver.find_elements(By.XPATH, "//tbody[@id='game-table-body']/tr")
+        assert len(rows) >= 3
+        screenshot = take_screenshot(driver, "persistence_after_reload")
+        record_result("Data persists after reload", "PASS", screenshot)
+    except Exception as e:
+        screenshot = take_screenshot(driver, "persistence_after_reload_fail")
+        record_result("Data persists after reload", "FAIL", screenshot, str(e))
 
 finally:
     driver.quit()
 
-#This part right here will generate an HTML report of the test results (It will show a table with the tests and screenshots).
-#You can also customize the report format as needed.
+#HTML report
 report_path = os.path.join(REPORT_DIR, "report.html")
 with open(report_path, "w", encoding="utf-8") as f:
     f.write("<html><head><title>Selenium Test Report</title></head><body>")
     f.write("<h1>Selenium Test Report</h1>")
     f.write("<table border='1' cellpadding='8' style='border-collapse:collapse;'>")
-    f.write("<tr><th>Test</th><th>Status</th><th>Screenshot</th><th>Message</th></tr>")
+    f.write("<tr><th>Test</th><th>Status</th><th>Screenshot</th></tr>")
     for res in results:
         color = "#d4edda" if res["status"] == "PASS" else "#f8d7da"
         f.write(f"<tr style='background:{color};'><td>{res['name']}</td><td>{res['status']}</td>")
-        f.write(f"<td><a href='{os.path.basename(res['screenshot'])}' target='_blank'><img src='{os.path.basename(res['screenshot'])}' width='200'></a></td>")
-        f.write(f"<td>{res['message']}</td></tr>")
+        f.write(f"<td><a href='{os.path.basename(res['screenshot'])}' target='_blank'><img src='{os.path.basename(res['screenshot'])}' width='200'></a></td></tr>")
     f.write("</table></body></html>")
 
 print(f"\nHTML report generated: {report_path}")
